@@ -18,11 +18,11 @@ Does not generate links in combat. NPC identifiers may be protected in dungeons.
 2. Type `/reload`, then `/whcopy settings` to assign the **in-game** keybind.
 3. Install [AutoHotkey v2](https://www.autohotkey.com/) on Windows.
 4. Double-click **`WowheadClipboard.ahk`** in the addon folder, set the **same** WoW keybind in its settings window, and click **Save**.
-5. Optionally create a Windows desktop shortcut to `WowheadClipboard.ahk` for convenient manual launching.
+5. Optionally create a desktop shortcut for manual launching. To launch automatically after signing in to Windows, check **Start when I sign in to Windows** in the AHK settings and save.
 
 Profession recipe lookup uses the selected recipe spell ID, not necessarily the item it creates. The character or Inspect pane must be on its equipment tab, and you must hover an equipped item. Inspect uses the item displayed in the tooltip, not the inspected player's character ID.
 
-The AHK script must be started separately; WoW cannot launch it. Use its tray icon to reopen settings or exit. Keybinds are saved to `WowheadClipboard.ini` beside the script (ignored by Git).
+The AHK script must be started separately; WoW cannot launch it. Right-click its **Windows system tray icon → Change Keybinds / Settings** to edit keybinds and preferences at any time; double-clicking the tray icon also opens settings. Select **Don't show settings on manual launch** to start silently on later manual launches. Windows sign-in launches are **always silent**, regardless of this checkbox. Startup uses a shortcut in your **user Startup folder** (`shell:startup`), not a background service, and can be disabled by unchecking the option and saving. These settings and keybinds are saved in `WowheadClipboard.ini` beside the script (ignored by Git); startup is enabled by creating a Windows shortcut. If you move or remove the addon folder, update/remove the startup shortcut.
 
 ## How it works
 

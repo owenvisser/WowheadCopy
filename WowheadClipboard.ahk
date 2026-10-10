@@ -5,6 +5,10 @@ Persistent
 configPath := A_ScriptDir "\WowheadClipboard.ini"
 activeKey := IniRead(configPath, "Settings", "Hotkey", "F8")
 exitKey := IniRead(configPath, "Settings", "ExitHotkey", "^+F12")
+startupShortcut := A_Startup "\WowheadClipboard.lnk"
+startAtLogin := FileExist(startupShortcut) != ""
+skipPrompt := IniRead(configPath, "Settings", "SkipSettingsPrompt", "0") = "1"
+isStartupLaunch := A_Args.Length && A_Args[1] = "--autostart"
 A_IconTip := "WowheadClipboard - WowheadCopy companion"
 copyArmed := false
 copyIssued := false
@@ -16,10 +20,14 @@ keyEvents := []
 settingsGui := Gui(, "WowheadClipboard Settings")
 settingsGui.SetFont("s9", "Segoe UI")
 settingsGui.Add("Text", "xm w340", "Match the WoW shortcut to your WowheadCopy keybind.")
-settingsGui.Add("Text", "xm y+14", "WoW keybind:")
+settingsGui.Add("Text", "xm y+14", "WoW keybind: (must match in-game addon)")
 keyField := settingsGui.Add("Hotkey", "xm w185", activeKey)
 settingsGui.Add("Text", "xm y+12", "Emergency exit (works anywhere):")
 exitField := settingsGui.Add("Hotkey", "xm w185", exitKey)
+startupField := settingsGui.Add("CheckBox", "xm y+16 w345", "Start when I sign in to Windows")
+startupField.Value := startAtLogin
+skipField := settingsGui.Add("CheckBox", "xm y+8 w345", "Don't show settings on manual launch")
+skipField.Value := skipPrompt
 settingsGui.Add("Button", "xm y+16 w95 Default", "Save").OnEvent("Click", SaveSettings)
 settingsGui.Add("Button", "x+10 w95", "Hide").OnEvent("Click", (*) => settingsGui.Hide())
 settingsGui.Add("Text", "xm y+16 w340", "Stops after 3 clipboard changes or 3 WoW keypresses within 1 second.")
@@ -31,21 +39,37 @@ Hotkey("~" activeKey, CopyFromWoW, "On")
 HotIf()
 Hotkey(exitKey, EmergencyExit, "On")
 OnClipboardChange(OpenWowhead)
-A_TrayMenu.Add("Settings", ShowSettings)
-A_TrayMenu.Default := "Settings"
-settingsGui.Show()
+A_TrayMenu.Add("Change Keybinds / Settings", ShowSettings)
+A_TrayMenu.Default := "Change Keybinds / Settings"
+if !isStartupLaunch && !skipPrompt
+    settingsGui.Show()
 
 ShowSettings(*) {
-    global settingsGui, keyField, exitField, activeKey, exitKey
+    global settingsGui, keyField, exitField, startupField, skipField
+    global activeKey, exitKey, skipPrompt, startupShortcut
     keyField.Value := activeKey
     exitField.Value := exitKey
+    startupField.Value := FileExist(startupShortcut) != ""
+    skipField.Value := skipPrompt
     settingsGui.Show()
+}
+
+SetStartup(enabled) {
+    global startupShortcut
+    if enabled
+        FileCreateShortcut(A_AhkPath, startupShortcut, A_ScriptDir,
+            '"' A_ScriptFullPath '" --autostart', "Start WowheadClipboard at Windows sign-in")
+    else if FileExist(startupShortcut)
+        FileDelete(startupShortcut)
 }
 
 SaveSettings(*) {
     global activeKey, exitKey, keyField, exitField, configPath, settingsGui
+    global startupField, skipField, startAtLogin, skipPrompt
     newKey := keyField.Value
     newExit := exitField.Value
+    newStartup := startupField.Value = 1
+    newSkip := skipField.Value = 1
     if !newKey || !newExit || RegExMatch(newKey, "^[\^!+]+$") || RegExMatch(newExit, "^[\^!+]+$") {
         MsgBox("Choose two complete key combinations.", "WowheadClipboard")
         return
@@ -54,12 +78,14 @@ SaveSettings(*) {
         MsgBox("The WoW and emergency-exit keybinds must be different.", "WowheadClipboard")
         return
     }
-    if (newKey = activeKey) && (newExit = exitKey) {
+    if (newKey = activeKey) && (newExit = exitKey)
+        && (newStartup = startAtLogin) && (newSkip = skipPrompt) {
         settingsGui.Hide()
         return
     }
     newCopyRegistered := false
     newExitRegistered := false
+    startupChanged := false
     try {
         if (newKey != activeKey) {
             HotIf(IsWoWActive)
@@ -71,8 +97,13 @@ SaveSettings(*) {
             Hotkey(newExit, EmergencyExit, "On")
             newExitRegistered := true
         }
+        if (newStartup != startAtLogin) {
+            SetStartup(newStartup)
+            startupChanged := true
+        }
         IniWrite(newKey, configPath, "Settings", "Hotkey")
         IniWrite(newExit, configPath, "Settings", "ExitHotkey")
+        IniWrite(newSkip ? "1" : "0", configPath, "Settings", "SkipSettingsPrompt")
     } catch as err {
         HotIf()
         if newCopyRegistered {
@@ -82,7 +113,10 @@ SaveSettings(*) {
         }
         if newExitRegistered
             Hotkey(newExit, "Off")
-        MsgBox("Could not save keybinds:`n" err.Message, "WowheadClipboard")
+        if startupChanged {
+            try SetStartup(startAtLogin)
+        }
+        MsgBox("Could not save settings:`n" err.Message, "WowheadClipboard")
         return
     }
     if (newKey != activeKey) {
@@ -94,6 +128,8 @@ SaveSettings(*) {
         Hotkey(exitKey, "Off")
     activeKey := newKey
     exitKey := newExit
+    startAtLogin := newStartup
+    skipPrompt := newSkip
     settingsGui.Hide()
 }
 
