@@ -116,7 +116,7 @@ CheckBurst(events) {
     events.Push(now)
     while events.Length && (now - events[1] < 0 || now - events[1] >= 1000)
         events.RemoveAt(1)
-    if events.Length >= 5
+    if events.Length >= 3
         ExitApp()
 }
 
