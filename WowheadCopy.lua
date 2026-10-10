@@ -6,7 +6,7 @@ local URL_PREFIX = "https://www.wowhead.com/forever/"
 
 -- 1. URL WINDOW
 local frame = CreateFrame("Frame", "WowheadCopyFrame", UIParent, "BasicFrameTemplateWithInset")
-frame:SetSize(400, 120)
+frame:SetSize(450, 220)
 frame:SetPoint("CENTER")
 frame:SetFrameStrata("DIALOG")
 frame:SetMovable(true)
@@ -50,7 +50,7 @@ end)
 
 -- 2. KEYBIND SETTINGS
 local settings = CreateFrame("Frame", "WowheadCopySettings", UIParent, "BasicFrameTemplateWithInset")
-settings:SetSize(540, 324)
+settings:SetSize(540, 224)
 settings:SetPoint("CENTER", 0, 30)
 settings:SetFrameStrata("DIALOG")
 settings.TitleText:SetText("WowheadCopy - Keybind")
