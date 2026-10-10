@@ -50,7 +50,7 @@ end)
 
 -- 2. KEYBIND SETTINGS
 local settings = CreateFrame("Frame", "WowheadCopySettings", UIParent, "BasicFrameTemplateWithInset")
-settings:SetSize(440, 224)
+settings:SetSize(540, 324)
 settings:SetPoint("CENTER", 0, 30)
 settings:SetFrameStrata("DIALOG")
 settings.TitleText:SetText("WowheadCopy - Keybind")
