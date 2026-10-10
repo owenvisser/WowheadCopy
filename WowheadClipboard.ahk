@@ -22,7 +22,7 @@ settingsGui.Add("Text", "xm y+12", "Emergency exit (works anywhere):")
 exitField := settingsGui.Add("Hotkey", "xm w185", exitKey)
 settingsGui.Add("Button", "xm y+16 w95 Default", "Save").OnEvent("Click", SaveSettings)
 settingsGui.Add("Button", "x+10 w95", "Hide").OnEvent("Click", (*) => settingsGui.Hide())
-settingsGui.Add("Text", "xm y+16 w340", "Stops after 5 clipboard changes or 5 WoW keypresses within 1 second.")
+settingsGui.Add("Text", "xm y+16 w340", "Stops after 3 clipboard changes or 3 WoW keypresses within 1 second.")
 settingsGui.OnEvent("Close", (*) => settingsGui.Hide())
 settingsGui.OnEvent("Escape", (*) => settingsGui.Hide())
 

@@ -1,5 +1,5 @@
 ## Interface: 16001, 11509
 ## Title: WowheadCopy
-## Notes: Context-sensitive item, inspect gear, profession recipe, NPC, and quest links for Wowhead Forever. Configure keybind with /whcopy settings.
-## Version: 1.5.7
+## Notes: Context-sensitive chat links, items, inspect gear, profession recipes, NPCs, and quests for Wowhead Forever. Configure keybind with /whcopy settings.
+## Version: 1.5.8
 WowheadCopy.lua

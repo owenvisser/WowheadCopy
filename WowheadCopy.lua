@@ -192,7 +192,30 @@ combatWatcher:SetScript("OnEvent", function()
     settings:Hide()
 end)
 
--- 3. CONTEXT DETECTION (ITEM/INSPECT PANELS > PROFESSION > NPC > QUEST)
+-- 3. CLICKED CHAT LINKS (OPEN INFORMATION PANEL REQUIRED)
+local clickedKind, clickedID
+if ItemRefTooltip then
+    ItemRefTooltip:HookScript("OnHide", function()
+        clickedKind, clickedID = nil, nil
+    end)
+end
+
+hooksecurefunc("SetItemRef", function(link)
+    -- A click is valid only while Blizzard's link information panel is visible.
+    clickedKind, clickedID = nil, nil
+    if not ItemRefTooltip or not ItemRefTooltip:IsVisible() then return end
+    -- Modifier-clicks can use other actions while leaving an old panel visible.
+    if (IsShiftKeyDown and IsShiftKeyDown())
+        or (IsControlKeyDown and IsControlKeyDown()) then return end
+    if issecretvalue and issecretvalue(link) then return end
+    local kind, id = link:match("^(%a+):(%d+)")
+    if (kind == "item" or kind == "quest" or kind == "spell")
+        and id and tonumber(id) > 0 then
+        clickedKind, clickedID = kind, id
+    end
+end)
+
+-- 4. CONTEXT DETECTION (CLICKED LINK > ITEM/INSPECT > PROFESSION > NPC > QUEST)
 local function BagsOpen()
     if IsBagOpen then
         for bag = 0, NUM_BAG_SLOTS or 4 do
@@ -335,6 +358,8 @@ function WowheadCopy_HoveredItem()
     local kind, id, errorMessage
     if InCombatLockdown() then
         errorMessage = "WowheadCopy: Unavailable during combat."
+    elseif clickedKind and clickedID and ItemRefTooltip and ItemRefTooltip:IsVisible() then
+        kind, id = clickedKind, clickedID
     elseif BagsOpen() or EquipmentOpen() or InspectEquipmentOpen() then
         kind, id = "item", HoveredItemID()
         if not id and ProfessionOpen() then
@@ -368,7 +393,7 @@ function WowheadCopy_HoveredItem()
             errorMessage = "WowheadCopy: Hover over or select a quest in the visible Quest Log."
         end
     else
-        errorMessage = "WowheadCopy: No item, NPC target, or open quest window found."
+        errorMessage = "WowheadCopy: No open chat-link panel, item, NPC target, or quest window found."
     end
     local url = not errorMessage and (URL_PREFIX .. kind .. "=" .. id) or ""
     if not BeginTransfer(url) then

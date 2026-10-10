@@ -4,6 +4,7 @@ A World of Warcraft addon with an optional AutoHotkey v2 companion for opening W
 
 ## What it searches
 
+- **Clicked chat-link information panel open:** linked item (`item=ID`), quest (`quest=ID`), or spell (`spell=ID`), taking priority over other lookups. Hovering alone does not activate it.
 - **Inventory, character equipment, or Inspect equipment open:** hovered item (`item=ID`)
 - **Profession window open:** hovered reagent/product (`item=ID`), otherwise selected recipe (`spell=ID`)
 - **Otherwise, NPC targeted:** targeted NPC (`npc=ID`)
@@ -25,7 +26,7 @@ The AHK script must be started separately; WoW cannot launch it. Use its tray ic
 
 ## How it works
 
-When you press the shared keybind, the addon briefly opens chat with a Wowhead URL highlighted. AHK waits **60 ms**, sends `Ctrl+C`, and opens the link in your browser. Lua clears and closes the temporary chat input after **150 ms**. The chat text is highlighted again on the next frame to account for Blizzard's delayed chat initialization. Failed lookups clear any previous addon-generated URL and open an empty chat input for the same interval, absorbing Ctrl+C without triggering the character pane. Quest IDs are read only while a quest window is actually visible; closing the Quest Log no longer reuses its previously selected quest.
+When you press the shared keybind, the addon briefly opens chat with a Wowhead URL highlighted. AHK waits **60 ms**, sends `Ctrl+C`, and opens the link in your browser. Lua clears and closes the temporary chat input after **150 ms**. The chat text is highlighted again on the next frame to account for Blizzard's delayed chat initialization. Failed lookups clear any previous addon-generated URL and open an empty chat input for the same interval, absorbing Ctrl+C without triggering the character pane. Clicked chat hyperlinks are read only while their information popup is visible, and cleared when it closes. Quest IDs are read only while a quest window is actually visible; closing the Quest Log no longer reuses its previously selected quest.
 
 ## Safeguards
 
