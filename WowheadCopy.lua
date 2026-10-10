@@ -4,53 +4,20 @@ BINDING_NAME_WOWHEADCOPY_HOVER = "Generate Wowhead Forever URL"
 local ACTION = "WOWHEADCOPY_HOVER"
 local URL_PREFIX = "https://www.wowhead.com/forever/"
 
--- 1. URL WINDOW
-local frame = CreateFrame("Frame", "WowheadCopyFrame", UIParent, "BasicFrameTemplateWithInset")
-frame:SetSize(450, 150)
-frame:SetPoint("CENTER")
-frame:SetFrameStrata("DIALOG")
-frame:SetMovable(true)
-frame:EnableMouse(true)
-frame:RegisterForDrag("LeftButton")
-frame:SetScript("OnDragStart", frame.StartMoving)
-frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
-frame.TitleText:SetText("Wowhead Forever URL")
-frame:Hide()
-
-local resultLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-resultLabel:SetPoint("TOPLEFT", 20, -43)
-resultLabel:SetText("Click Copy Link, then press Ctrl+C.")
-
-local editBox = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
-editBox:SetPoint("TOPLEFT", 24, -72)
-editBox:SetPoint("TOPRIGHT", -24, -72)
-editBox:SetHeight(24)
-editBox:SetAutoFocus(false)
-local currentURL
-editBox:SetScript("OnTextChanged", function(self, userInput)
-    if userInput and currentURL then
-        self:SetText(currentURL)
-        self:HighlightText()
+-- 1. TEMPORARY CHAT LINK
+local pendingChat, pendingURL, transferToken = nil, nil, 0
+local function CloseTransfer()
+    if pendingChat and ChatEdit_GetActiveWindow() == pendingChat
+        and pendingChat:GetText() == pendingURL then
+        pendingChat:SetText("")
+        ChatEdit_DeactivateChat(pendingChat)
     end
-end)
-editBox:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
-editBox:SetScript("OnMouseUp", function(self) self:HighlightText() end)
-editBox:SetScript("OnEscapePressed", function() frame:Hide() end)
-editBox:SetScript("OnEnterPressed", function(self) self:HighlightText() end)
-frame:SetScript("OnHide", function() editBox:ClearFocus() end)
-
-local copyButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-copyButton:SetSize(120, 24)
-copyButton:SetPoint("BOTTOMLEFT", 20, 16)
-copyButton:SetText("Highlight Link")
-copyButton:SetScript("OnClick", function()
-    editBox:SetFocus()
-    editBox:HighlightText()
-end)
+    pendingChat, pendingURL = nil, nil
+end
 
 -- 2. KEYBIND SETTINGS
 local settings = CreateFrame("Frame", "WowheadCopySettings", UIParent, "BasicFrameTemplateWithInset")
-settings:SetSize(540, 224)
+settings:SetSize(440, 224)
 settings:SetPoint("CENTER", 0, 30)
 settings:SetFrameStrata("DIALOG")
 settings.TitleText:SetText("WowheadCopy - Keybind")
@@ -162,20 +129,10 @@ settings:SetScript("OnHide", function()
     if capturing then StopCapture() end
 end)
 
-local settingsButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-settingsButton:SetSize(90, 24)
-settingsButton:SetPoint("BOTTOMRIGHT", -20, 16)
-settingsButton:SetText("Keybind...")
-settingsButton:SetScript("OnClick", function()
-    if InCombatLockdown() then return end
-    frame:Hide()
-    settings:Show()
-end)
-
 local combatWatcher = CreateFrame("Frame")
 combatWatcher:RegisterEvent("PLAYER_REGEN_DISABLED")
 combatWatcher:SetScript("OnEvent", function()
-    frame:Hide()
+    CloseTransfer()
     settings:Hide()
 end)
 
@@ -293,11 +250,26 @@ function WowheadCopy_HoveredItem()
         end
     end
 
-    currentURL = URL_PREFIX .. kind .. "=" .. id
-    resultLabel:SetText(kind:upper() .. " ID: " .. id .. "  -  Click Copy Link, then press Ctrl+C.")
-    editBox:SetText(currentURL)
-    frame:Show()
-    editBox:ClearFocus() -- Never send the activation keystroke into the URL field.
+    -- Use chat only as a brief, selectable clipboard transfer field.
+    if ChatEdit_GetActiveWindow() then
+        print("WowheadCopy: Finish your current chat message before generating a link.")
+        return
+    end
+    local url = URL_PREFIX .. kind .. "=" .. id
+    ChatFrame_OpenChat(url)
+    local editBox = ChatEdit_GetActiveWindow()
+    if not editBox then
+        print("WowheadCopy: Could not open the chat input.")
+        return
+    end
+    editBox:SetText(url)
+    editBox:HighlightText()
+    pendingChat, pendingURL = editBox, url
+    transferToken = transferToken + 1
+    local token = transferToken
+    C_Timer.After(0.1, function()
+        if transferToken == token then CloseTransfer() end
+    end)
 end
 
 SLASH_WOWHEADCOPY1 = "/whcopy"
@@ -310,6 +282,7 @@ SlashCmdList.WOWHEADCOPY = function(msg)
     if command == "settings" or command == "config" or command == "bind" then
         settings:Show()
     else
-        WowheadCopy_HoveredItem()
+        -- Allow a typed /whcopy command to finish closing its chat input.
+        C_Timer.After(0, WowheadCopy_HoveredItem)
     end
 end
