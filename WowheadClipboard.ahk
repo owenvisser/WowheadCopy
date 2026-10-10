@@ -20,7 +20,7 @@ keyEvents := []
 settingsGui := Gui(, "WowheadClipboard Settings")
 settingsGui.SetFont("s9", "Segoe UI")
 settingsGui.Add("Text", "xm w340", "Match the WoW shortcut to your WowheadCopy keybind.")
-settingsGui.Add("Text", "xm y+14", "WoW keybind: (must match in-game addon)")
+settingsGui.Add("Text", "xm y+14", "WoW keybind: (against ToS to match in-game addon)")
 keyField := settingsGui.Add("Hotkey", "xm w185", activeKey)
 settingsGui.Add("Text", "xm y+12", "Emergency exit (works anywhere):")
 exitField := settingsGui.Add("Hotkey", "xm w185", exitKey)
