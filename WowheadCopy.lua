@@ -6,7 +6,7 @@ local URL_PREFIX = "https://www.wowhead.com/forever/"
 
 -- 1. URL WINDOW
 local frame = CreateFrame("Frame", "WowheadCopyFrame", UIParent, "BasicFrameTemplateWithInset")
-frame:SetSize(450, 220)
+frame:SetSize(450, 150)
 frame:SetPoint("CENTER")
 frame:SetFrameStrata("DIALOG")
 frame:SetMovable(true)
